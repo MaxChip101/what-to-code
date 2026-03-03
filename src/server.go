@@ -1,22 +1,19 @@
 package main
 
 type Server struct {
-	Port  int
-	Ideas []Idea
+	Port int
 }
 
 type Idea struct {
-	Creator  User      `json:"creator"`
-	Title    string    `json:"title"`
-	Content  string    `json:"content"`
-	Tags     []Tag     `json:"tags"`
-	Id       string    `json:"id"` // server generated
-	Comments []Comment `json:"comments"`
-	Requests int       `json:"requests"` // server generated, used for popularity
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    []string `json:"tags"`
+	Id      string   `json:"id"` // server generated
+	Reviews []Review `json:"reviews"`
 }
 
-type Comment struct {
-	Creator User   `json:"creator"`
+type Review struct {
+	Rating  bool   `json:"rating"`
 	Content string `json:"content"`
 	Id      string `json:"id"` // server generated
 }
@@ -25,8 +22,4 @@ type Tag struct {
 	Name string `json:"name"`
 }
 
-type User struct {
-	Name string `json:"name"`
-}
-
-// http://localhost:8080/ideas/?id=%2212ehfwj93%22
+// http://localhost:8080/idea/?id=1235464

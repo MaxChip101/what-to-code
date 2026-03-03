@@ -5,28 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 // code.dev/
 
 func main() {
 	server := Server{Port: 8080}
-	router := mux.NewRouter()
-	router.HandleFunc("/", DisplayWebsite)
-	router.HandleFunc("/submit-idea", SubmitIdea).Methods("POST")
-	router.HandleFunc("/submit-comment", SubmitComment).Methods("POST")
-	router.HandleFunc("/get-idea", GetIdea).Methods("GET")
-	router.HandleFunc("/get-random-idea", GetRandomIdea).Methods("GET")
-	router.HandleFunc("/get-popular-ideas", GetPopularIdea).Methods("GET")
-	router.HandleFunc("/get-new-ideas", GetNewIdea).Methods("GET")
-	router.HandleFunc("/get-random-idea", GetRandomIdea).Methods("GET")
-	router.HandleFunc("/get-idea", GetIdea).Methods("GET")
-	router.HandleFunc("/get-comment", GetComment).Methods("GET")
-	router.HandleFunc("/get-comments", GetComments).Methods("GET")
+	router := http.NewServeMux()
+	router.HandleFunc("POST /post-idea", PostIdea)
+	router.HandleFunc("POST /post-comment", PostComment)
+	router.HandleFunc("GET /ideas", GetIdeas)
+	router.HandleFunc("GET /idea", GetIdea)
 
-	router.PathPrefix("/res/").Handler(http.StripPrefix("/res/", http.FileServer(http.Dir("./res"))))
+	log.Println("server running on port 8080")
+
 	err := http.ListenAndServe(fmt.Sprintf(":%v", server.Port), router)
 	if errors.Is(err, http.ErrServerClosed) {
 		log.Println("server closed")
