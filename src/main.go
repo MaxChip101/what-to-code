@@ -10,12 +10,12 @@ import (
 // code.dev/
 
 func main() {
+	InitDatabase()
 	server := Server{Port: 8080}
 	router := http.NewServeMux()
 	router.HandleFunc("POST /post-idea", PostIdea)
-	router.HandleFunc("POST /post-comment", PostComment)
+	router.HandleFunc("POST /post-review", PostReview)
 	router.HandleFunc("GET /ideas", GetIdeas)
-	router.HandleFunc("GET /idea", GetIdea)
 
 	log.Println("server running on port 8080")
 
