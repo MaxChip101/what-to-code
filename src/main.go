@@ -5,10 +5,25 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"golang.org/x/time/rate"
 )
+
+var limiter *rate.Limiter
+
+func limitMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && !limiter.Allow() {
+			SendJSON(w, http.StatusTooManyRequests, &Response{Status: false, Error: "rate limit exceeded: too many requests"})
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
 
 func main() {
 	InitDatabase()
+	limiter = rate.NewLimiter(6, 24)
 	server := Server{Port: 8080}
 	router := http.NewServeMux()
 	router.HandleFunc("POST /post-idea", PostIdea)
