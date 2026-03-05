@@ -5,7 +5,7 @@ export PGPASSWORD
 
 echo -e "\ncreating db"
 
-psql -h 127.0.0.1 -U postgres -c "CREATE DATABASE what_to_code;"
+psql -h 127.0.0.1 -U postgres -c "CREATE DATABASE ideas;"
 
 echo "applying schema"
 
