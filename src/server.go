@@ -10,5 +10,3 @@ type Idea struct {
 	Tags    []string `json:"tags"`
 	Id      int      `json:"id"` // server generated
 }
-
-// http://localhost:8080/idea/?id=1235464
