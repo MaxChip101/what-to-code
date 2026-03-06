@@ -62,51 +62,40 @@ func GetIdeas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if limit_string != "" && tag_string != "" {
-		tags := strings.Split(tag_string, ",")
-		limit, err := strconv.Atoi(limit_string)
+	// problem with limit parsing on else, also try to optimize ts
+
+	var err error
+	var limit int
+	tags := strings.Split(tag_string, ",")
+	if limit_string != "" {
+		limit, err = strconv.Atoi(limit_string)
 		if err != nil {
 			SendJSON(w, http.StatusBadRequest, &Response{Status: false, Error: "could not parse limit"})
 			return
 		}
-		ideas, err := GetIdeasFromTags(tags, limit)
-		if err != nil {
-			SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
-			log.Println(err)
-			return
-		}
-
-		SendJSON(w, http.StatusOK, &Response{Status: true, Data: ideas})
-	} else if tag_string != "" {
-		tags := strings.Split(tag_string, ",")
-		ideas, err := GetIdeasFromTags(tags, 1)
-		if err != nil {
-			SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
-			log.Println(err)
-			return
-		}
-
-		SendJSON(w, http.StatusOK, &Response{Status: true, Data: ideas})
 	} else {
-		limit := 1
-		var err error
-		if limit_string != "" {
-			limit, err = strconv.Atoi(limit_string)
-			if err != nil {
-				SendJSON(w, http.StatusBadRequest, &Response{Status: false, Error: "could not parse limit"})
-				return
-			}
-		}
+		limit = 1
+	}
 
-		ideas, err := GetIdeasFromDB(limit)
+	var ideas []Idea
+
+	if tag_string != "" {
+		ideas, err = GetIdeasFromTags(tags, limit)
 		if err != nil {
 			SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
 			log.Println(err)
 			return
 		}
-
-		SendJSON(w, http.StatusOK, &Response{Status: true, Data: ideas})
+	} else {
+		ideas, err = GetIdeasFromDB(limit)
+		if err != nil {
+			SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
+			log.Println(err)
+			return
+		}
 	}
+
+	SendJSON(w, http.StatusOK, &Response{Status: true, Data: ideas})
 }
 
 func SendJSON(w http.ResponseWriter, status int, response *Response) {
