@@ -25,7 +25,13 @@ func PostIdea(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if idea.Title == "" || idea.Content == "" {
+		SendJSON(w, http.StatusBadRequest, &Response{Status: false, Error: "json data contains empty values"})
+		return
+	}
+
 	err = PostIdeaIntoDB(&idea)
+
 	if err != nil {
 		SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
 		log.Println(err)
