@@ -31,11 +31,11 @@ Adds a new idea to the database.
 
 The `id` is server-generated, so you should **not** send it from the frontend.
 
-| Field   | Type     | Description                                  |
-| ------- | -------- | -------------------------------------------- |
-| title   | string   | The title of the idea.                       |
-| content | string   | Detailed description.                        |
-| tags    | string[] | An array of strings (e.g., `["web", "go"]`). |
+| Field   | Type     | Description                                                   |
+| ------- | -------- | ------------------------------------------------------------- |
+| title   | string   | The title of the idea. **Cannot Be Empty**                    |
+| content | string   | Detailed description. **Cannot Be Empty**                     |
+| tags    | string[] | An array of strings (e.g., `["web", "go"]`). **Can Be Empty** |
 
 **Example:**
 
