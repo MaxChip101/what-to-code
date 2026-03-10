@@ -15,6 +15,10 @@ type Response struct {
 	Error  string `json:"error,omitempty"`
 }
 
+func Docs(w http.ResponseWriter, r *http.Request) {
+	SendJSON(w, http.StatusOK, &Response{Status: true, Error: "See \"https://github.com/MaxChip101/what-to-code\" for API documentation"})
+}
+
 func PostIdea(w http.ResponseWriter, r *http.Request) {
 	var idea Idea
 	defer r.Body.Close()

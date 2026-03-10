@@ -26,6 +26,7 @@ func main() {
 	limiter = rate.NewLimiter(6, 24)
 	server := Server{Port: 8080}
 	router := http.NewServeMux()
+	router.HandleFunc("/", Docs)
 	router.HandleFunc("POST /post-idea", PostIdea)
 	router.HandleFunc("GET /ideas", GetIdeas)
 
