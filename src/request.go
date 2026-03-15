@@ -9,14 +9,15 @@ import (
 	"strings"
 )
 
-type Response struct {
-	Status bool   `json:"status"`
-	Data   any    `json:"data,omitempty"`
-	Error  string `json:"error,omitempty"`
+type Response[T any] struct {
+	Status  string `json:"status"`
+	Code    int    `json:"code"`
+	Data    T      `json:"data,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 func Docs(w http.ResponseWriter, r *http.Request) {
-	SendJSON(w, http.StatusOK, &Response{Status: true, Error: "See \"https://github.com/MaxChip101/what-to-code\" for API documentation"})
+	SendJSON(w, Success(http.StatusOK, "Go to \"https://github.com/MaxChip101/what-to-code\" for documentation"))
 }
 
 func PostIdea(w http.ResponseWriter, r *http.Request) {
@@ -25,22 +26,24 @@ func PostIdea(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
 	err := json.NewDecoder(r.Body).Decode(&idea)
 	if err != nil {
-		SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "failed to decode incoming json data"})
+		SendJSON(w, Error(http.StatusInternalServerError, "Failed to parse idea"))
 		return
 	}
 
 	if idea.Title == "" || idea.Content == "" {
-		SendJSON(w, http.StatusBadRequest, &Response{Status: false, Error: "json data contains empty values"})
+		SendJSON(w, Error(http.StatusBadRequest, "No title or content provided"))
 		return
 	}
 
 	err = PostIdeaIntoDB(&idea)
 
 	if err != nil {
-		SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
+		SendJSON(w, Error(http.StatusInternalServerError, "Failed to post idea into database"))
 		log.Println(err)
 		return
 	}
+
+	SendJSON(w, Success(http.StatusOK, "success"))
 }
 
 func GetIdeas(w http.ResponseWriter, r *http.Request) {
@@ -49,30 +52,26 @@ func GetIdeas(w http.ResponseWriter, r *http.Request) {
 	tag_string := query.Get("tags")
 	id_string := query.Get("id")
 
-	// make tag searching, ignore tag searching if id provided
-
 	if id_string != "" {
 		id, err := strconv.Atoi(id_string)
 		if err != nil {
-			SendJSON(w, http.StatusBadRequest, &Response{Status: false, Error: "could not parse id"})
+			SendJSON(w, Error(http.StatusInternalServerError, "Failed to parse id"))
 			return
 		}
 		idea, err := GetIdeaFromId(id)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				SendJSON(w, http.StatusNotFound, &Response{Status: false, Error: "no posted idea with this id"})
+				SendJSON(w, Error(http.StatusNotFound, "No posted idea with this id"))
 				return
 			}
 
-			SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
+			SendJSON(w, Error(http.StatusInternalServerError, "Failed to get idea from database"))
 			log.Println(err)
 			return
 		}
-		SendJSON(w, http.StatusOK, &Response{Status: true, Data: []Idea{idea}})
+		SendJSON(w, Success(http.StatusOK, idea))
 		return
 	}
-
-	// problem with limit parsing on else, also try to optimize ts
 
 	var err error
 	var limit int
@@ -80,7 +79,7 @@ func GetIdeas(w http.ResponseWriter, r *http.Request) {
 	if limit_string != "" {
 		limit, err = strconv.Atoi(limit_string)
 		if err != nil {
-			SendJSON(w, http.StatusBadRequest, &Response{Status: false, Error: "could not parse limit"})
+			SendJSON(w, Error(http.StatusInternalServerError, "Failed to parse limit"))
 			return
 		}
 	} else {
@@ -92,25 +91,39 @@ func GetIdeas(w http.ResponseWriter, r *http.Request) {
 	if tag_string != "" {
 		ideas, err = GetIdeasFromTags(tags, limit)
 		if err != nil {
-			SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
+			SendJSON(w, Error(http.StatusInternalServerError, "Failed to get ideas from database"))
 			log.Println(err)
 			return
 		}
 	} else {
 		ideas, err = GetIdeasFromDB(limit)
 		if err != nil {
-			SendJSON(w, http.StatusInternalServerError, &Response{Status: false, Error: "internal server error"})
+			SendJSON(w, Error(http.StatusInternalServerError, "Failed to get ideas from database"))
 			log.Println(err)
 			return
 		}
 	}
 
-	SendJSON(w, http.StatusOK, &Response{Status: true, Data: ideas})
+	SendJSON(w, Success(http.StatusOK, ideas))
 }
 
-func SendJSON(w http.ResponseWriter, status int, response *Response) {
+func SendJSON(w http.ResponseWriter, response any) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
 	json.NewEncoder(w).Encode(response)
+}
+
+func Error(code int, message string) Response[any] {
+	return Response[any]{
+		Status:  "error",
+		Code:    code,
+		Message: message,
+	}
+}
+
+func Success[T any](code int, data T) Response[T] {
+	return Response[T]{
+		Status: "success",
+		Code:   code,
+		Data:   data,
+	}
 }

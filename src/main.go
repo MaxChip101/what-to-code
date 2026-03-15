@@ -14,7 +14,7 @@ var limiter *rate.Limiter
 func limitMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost && !limiter.Allow() {
-			SendJSON(w, http.StatusTooManyRequests, &Response{Status: false, Error: "rate limit exceeded: too many requests"})
+			SendJSON(w, Error(http.StatusTooManyRequests, "Rate limit exceeded"))
 			return
 		}
 		next.ServeHTTP(w, r)
